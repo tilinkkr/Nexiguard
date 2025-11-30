@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
@@ -7,6 +7,6 @@ RUN npm ci --production
 
 COPY . .
 
-EXPOSE 5000
+EXPOSE 5001
 
 CMD ["npm", "start"]
