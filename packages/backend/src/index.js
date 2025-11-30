@@ -52,6 +52,27 @@ try {
 app.use('/api/v1', proofRoutes);
 app.use('/api/incident', incidentRoutes);
 
+const { getMPM, refreshMPM } = require('./services/mpmService');
+
+// MPM Lab Routes
+app.get('/api/mpm/:policyId', (req, res) => {
+    const record = getMPM(req.params.policyId);
+    if (!record) {
+        return res.status(404).json({ error: 'MPM record not found' });
+    }
+    res.json(record);
+});
+
+app.post('/api/mpm/:policyId/refresh', async (req, res) => {
+    try {
+        const { tokenSymbol } = req.body;
+        const record = await refreshMPM(req.params.policyId, tokenSymbol);
+        res.json(record);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Routes moved to after specific endpoints to avoid shadowing
 // Request Logging Middleware
 app.use((req, res, next) => {

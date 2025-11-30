@@ -115,7 +115,9 @@ export default function LiveTokenFeed({ onTokenClick }: LiveTokenFeedProps) {
 
     const fetchCoins = async () => {
         try {
+            console.log('Fetching coins from:', `${API_URL}/memecoins?limit=20`);
             const res = await axios.get(`${API_URL}/memecoins?limit=20`);
+            console.log('Coins fetched:', res.data);
             const newCoins = res.data;
 
             if (coins.length > 0 && newCoins.length > 0) {

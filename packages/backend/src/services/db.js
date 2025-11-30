@@ -86,6 +86,16 @@ function initDb() {
 
         db.run(`CREATE INDEX IF NOT EXISTS idx_hype_policyId ON hype_metrics(policyId)`);
         db.run(`CREATE INDEX IF NOT EXISTS idx_hype_timestamp ON hype_metrics(timestamp)`);
+
+        db.run(`CREATE TABLE IF NOT EXISTS mpm_metrics (
+            policy_id TEXT PRIMARY KEY,
+            token_symbol TEXT,
+            window_min INTEGER NOT NULL,
+            mpm REAL NOT NULL,
+            sentiment TEXT NOT NULL,
+            sample_size INTEGER NOT NULL,
+            last_updated TEXT NOT NULL
+        )`);
     });
 }
 
@@ -267,15 +277,6 @@ function getIdentity(address) {
     });
 }
 
-module.exports = {
-    insertAuditLog, getAuditLogs,
-    insertToken, getToken, getTokenByPolicyId, getAllTokens, updateTokenTrust,
-    insertReport, getReports,
-    getVote, updateVote,
-    saveIdentity, getIdentity,
-    insertHypeMetric
-};
-
 // --- Hype Metrics ---
 
 function insertHypeMetric(metric) {
@@ -302,3 +303,52 @@ function insertHypeMetric(metric) {
         });
     });
 }
+
+// --- MPM Metrics ---
+
+function insertMPM(record) {
+    return new Promise((resolve, reject) => {
+        const { policyId, tokenSymbol, windowMinutes, mpm, sentiment, sampleSize, lastUpdated } = record;
+        const sql = `INSERT OR REPLACE INTO mpm_metrics (
+            policy_id, token_symbol, window_min, mpm, sentiment, sample_size, last_updated
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+
+        db.run(sql, [policyId, tokenSymbol, windowMinutes, mpm, sentiment, sampleSize, lastUpdated], function (err) {
+            if (err) reject(err);
+            else resolve(record);
+        });
+    });
+}
+
+function getMPM(policyId) {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT * FROM mpm_metrics WHERE policy_id = ?`;
+        db.get(sql, [policyId], (err, row) => {
+            if (err) reject(err);
+            else if (row) {
+                // Map DB columns back to object properties
+                resolve({
+                    policyId: row.policy_id,
+                    tokenSymbol: row.token_symbol,
+                    windowMinutes: row.window_min,
+                    mpm: row.mpm,
+                    sentiment: row.sentiment,
+                    sampleSize: row.sample_size,
+                    lastUpdated: row.last_updated
+                });
+            } else {
+                resolve(null);
+            }
+        });
+    });
+}
+
+module.exports = {
+    insertAuditLog, getAuditLogs,
+    insertToken, getToken, getTokenByPolicyId, getAllTokens, updateTokenTrust,
+    insertReport, getReports,
+    getVote, updateVote,
+    saveIdentity, getIdentity,
+    insertHypeMetric,
+    insertMPM, getMPM
+};

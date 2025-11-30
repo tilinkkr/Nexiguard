@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import type { IncidentDetails } from "../types/incident";
+import API_URL from "../apiConfig";
 
 interface Props {
     open: boolean;
@@ -10,6 +11,18 @@ interface Props {
 }
 
 export function IncidentSheet({ open, onClose, loading, data }: Props) {
+    const [mpm, setMpm] = useState<any>(null);
+
+    useEffect(() => {
+        if (open && data?.policyId) {
+            setMpm(null);
+            fetch(`${API_URL}/mpm/${data.policyId}`)
+                .then(res => res.ok ? res.json() : null)
+                .then(setMpm)
+                .catch(() => setMpm(null));
+        }
+    }, [open, data?.policyId]);
+
     if (!open) return null;
 
     return (
@@ -17,8 +30,17 @@ export function IncidentSheet({ open, onClose, loading, data }: Props) {
             <div className="h-full w-full max-w-xl bg-[#050510] border-l border-white/10 p-6 flex flex-col gap-4 shadow-2xl animate-in slide-in-from-right duration-300">
                 <header className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-lg font-semibold text-white">
+                        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                             Incident Sheet
+                            {mpm && (
+                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${mpm.sentiment === "BULLISH" ? "bg-emerald-500/20 text-emerald-300" :
+                                        mpm.sentiment === "PANIC" ? "bg-red-500/20 text-red-300" :
+                                            "bg-yellow-500/20 text-yellow-300"
+                                    }`}>
+                                    {mpm.sentiment === "BULLISH" ? "Bullish MPM" :
+                                        mpm.sentiment === "PANIC" ? "Panic MPM" : "Neutral MPM"}
+                                </span>
+                            )}
                         </h2>
                         {data && (
                             <p className="text-xs text-gray-400">

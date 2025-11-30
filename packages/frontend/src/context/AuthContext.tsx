@@ -18,6 +18,7 @@ interface AuthContextType {
     wallet: Wallet | null;
     connectWallet: () => Promise<void>;
     disconnectWallet: () => void;
+    login?: (email: string) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -55,12 +56,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             const api = await provider.enable();
             if (!api) throw new Error("Failed to enable wallet API");
-            
+
             const addresses = await api.getUsedAddresses();
             if (!addresses || !Array.isArray(addresses) || addresses.length === 0) {
                 throw new Error("No addresses found in wallet");
             }
-            
+
             const address = addresses[0]; // In a real app, convert hex to bech32
             if (!address) throw new Error("Invalid wallet address");
 
@@ -88,6 +89,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }
 
+    // Added login method for Cyberpunk Landing Page
+    const login = async (email: string) => {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const mockToken = 'mock_token_' + Math.random().toString(36).substr(2);
+        setToken(mockToken);
+        localStorage.setItem('nexguard_token', mockToken);
+        setUser({ id: 'user_' + email, role: 'operator', email });
+    };
+
     function disconnectWallet() {
         setToken(null);
         localStorage.removeItem('nexguard_token');
@@ -96,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     return (
-        <AuthContext.Provider value={{ token, user, wallet, connectWallet, disconnectWallet }}>
+        <AuthContext.Provider value={{ token, user, wallet, connectWallet, disconnectWallet, login }}>
             {children}
         </AuthContext.Provider>
     );

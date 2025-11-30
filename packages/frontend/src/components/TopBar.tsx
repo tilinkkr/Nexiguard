@@ -22,7 +22,9 @@ export default function TopBar() {
                     <NavLink to="/app/trade" label="Trade" />
                     <NavLink to="/app/passport" label="Passport" />
                     <NavLink to="/app/audits" label="Audits" />
-                    <NavLink to="/app/xray" label="X-Ray" />
+                    <NavLink to="/app/policy-xray" label="X-Ray" />
+                    <NavLink to="/app/naughty" label="Naughty List" />
+                    <NavLink to="/mpm-lab" label="MPM Lab" />
                 </nav>
             </div>
 

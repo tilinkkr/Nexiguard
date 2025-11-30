@@ -1,8 +1,8 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, AuthContext } from './context/AuthContext';
 import { WalletProvider } from './context/WalletContext';
-import { Suspense, lazy, Component } from 'react';
+import { Suspense, lazy, Component, useContext } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
 import './App.css';
 
@@ -65,8 +65,13 @@ const AuditsPage = lazy(() => import('./pages/AuditsPage'));
 const HypeAnalyzerPage = lazy(() => import('./pages/HypeAnalyzerPage'));
 const TokenDetailPage = lazy(() => import('./pages/TokenDetailPage'));
 const PolicyXRay = lazy(() => import('./pages/PolicyXRay'));
+const PolicyXRayAnalysis = lazy(() => import('./pages/PolicyXRayAnalysis'));
 const BundleInspector = lazy(() => import('./pages/BundleInspector'));
 const SafetyTools = lazy(() => import('./pages/SafetyTools'));
+const MPMLab = lazy(() => import('./pages/MPMLab'));
+const MasumiNaughty = lazy(() => import('./pages/MasumiNaughty'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 
 // Loading Fallback
 const PageLoader = () => (
@@ -78,7 +83,19 @@ const PageLoader = () => (
   </div>
 );
 
+// Protected Route Component
+const ProtectedRoute = ({ children }: { children: ReactNode }) => {
+  const { token } = useContext(AuthContext);
+  // For now, if no token, redirect to login. 
+  // In a real app, you might want to verify the token validity.
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
+
 export default function App() {
+  // Force HMR update
   return (
     <ErrorBoundary>
       <HelmetProvider>
@@ -87,14 +104,31 @@ export default function App() {
             <Router>
               <Suspense fallback={<PageLoader />}>
                 <Routes>
-                  {/* Public Website Routes */}
-                  <Route path="/" element={
-                    <>
-                      <Header />
-                      <Landing />
-                      <Footer />
-                    </>
+                  {/* Protected App Routes */}
+                  <Route path="/app/*" element={
+                    <ProtectedRoute>
+                      <DashboardLayout>
+                        <Routes>
+                          <Route index element={<Home />} />
+                          <Route path="trade" element={<TradePage />} />
+                          <Route path="mint" element={<MintPage />} />
+                          <Route path="passport" element={<PassportPage />} />
+                          <Route path="audits" element={<AuditsPage />} />
+                          <Route path="explorer" element={<HypeAnalyzerPage />} />
+                          <Route path="token/:id" element={<TokenDetailPage />} />
+                          <Route path="policy-xray" element={<PolicyXRay />} />
+                          <Route path="policy-xray/:id" element={<PolicyXRayAnalysis />} />
+                          <Route path="bundle-inspector" element={<BundleInspector />} />
+                          <Route path="tools" element={<SafetyTools />} />
+                          <Route path="mpm-lab" element={<MPMLab />} />
+                          <Route path="naughty" element={<MasumiNaughty />} />
+                          <Route path="*" element={<Navigate to="/app" replace />} />
+                        </Routes>
+                      </DashboardLayout>
+                    </ProtectedRoute>
                   } />
+
+                  {/* Public Website Routes */}
                   <Route path="/docs" element={
                     <>
                       <Header />
@@ -105,25 +139,22 @@ export default function App() {
                       <Footer />
                     </>
                   } />
+
+                  {/* Standalone Public Tools */}
                   <Route path="/bundle-inspector" element={<BundleInspector />} />
                   <Route path="/tools" element={<SafetyTools />} />
-
-                  {/* Protected App Routes */}
-                  <Route path="/app/*" element={
+                  <Route path="/mpm-lab" element={
                     <DashboardLayout>
-                      <Routes>
-                        <Route path="/" element={<Home />} />
-                        <Route path="/mint" element={<MintPage />} />
-                        <Route path="/passport" element={<PassportPage />} />
-                        <Route path="/audits" element={<AuditsPage />} />
-                        <Route path="/trade" element={<TradePage />} />
-                        <Route path="/trade" element={<TradePage />} />
-                        <Route path="/hype-analyzer" element={<HypeAnalyzerPage />} />
-                        <Route path="/token/:id" element={<TokenDetailPage />} />
-                        <Route path="/xray" element={<PolicyXRay />} />
-                      </Routes>
+                      <MPMLab />
                     </DashboardLayout>
                   } />
+
+                  {/* Landing & Auth Routes (Catch-all for root) */}
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/*" element={<Landing />} />
+
+                  {/* 404 Fallback for unhandled routes not caught by Landing */}
                   <Route path="*" element={
                     <div className="min-h-screen flex items-center justify-center text-white">
                       <div className="text-center">
