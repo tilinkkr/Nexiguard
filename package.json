@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "npm start --prefix packages/backend",
+    "postinstall": "npm install --prefix packages/backend",
     "dev": "concurrently \"npm run dev --prefix packages/backend\" \"npm run dev --prefix packages/frontend\""
   },
   "keywords": [],
